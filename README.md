@@ -1,38 +1,76 @@
 # wrap7z
 
-7-Zip (`7z.exe`) のウィンドウなしラッパー。右クリックメニューから静かに展開する。
+Windows の右クリックから、7-Zip でアーカイブを静かに展開する小さなツールです。
 
-## 概要
+## なにをするもの？
 
-`7z.exe` を直接レジストリから呼び出すと、展開中にコンソールウィンドウが一瞬表示される。  
-`wrap7z` はそれを `CREATE_NO_WINDOW` フラグで抑制するだけの薄いラッパー。
+7-Zip を右クリックメニューから直接呼ぶと、展開のたびに黒いコンソールウィンドウが一瞬出ます。
 
-## ビルド
+wrap7z はそのウィンドウを出さずに `7z.exe` を起動するだけの薄いラッパーです。展開そのものはいつもの 7-Zip です。
+
+## 必要なもの
+
+- Windows
+- [7-Zip](https://7-zip.opensource.jp)（標準の `C:\Program Files\7-Zip\7z.exe`）
+
+## 準備
+
+### 1. wrap7z.exe を用意する
+
+[Releases](https://github.com/takumin287877/wrap7z/releases) から `wrap7z.exe` をダウンロードするか、自分でビルドします。
 
 ```sh
 cargo build --release
 ```
 
-## 使い方
-
-### レジストリへの登録
-
-`regedit` で以下のキーを作成する。
+できたファイルは `target/release/wrap7z.exe` です。次の場所に置きます。
 
 ```
-HKEY_CLASSES_ROOT\*\shell\wrap7z\command
+C:\Program Files\7-Zip\wrap7z.exe
 ```
 
-| キー | 値 |
-|---|---|
-| `HKEY_CLASSES_ROOT\*\shell\wrap7z` の `(既定)` | `7-Zipで展開` |
-| `HKEY_CLASSES_ROOT\*\shell\wrap7z` の `Icon` | `C:\Program Files\7-Zip\7zFM.exe,0` |
-| `HKEY_CLASSES_ROOT\*\shell\wrap7z\command` の `(既定)` | `"C:\path\to\wrap7z.exe" "%1"` |
+### 2. 右クリックメニューに追加する
 
-### 展開の仕様
+作る場所は **すべてのファイル用の右クリックメニュー** です。7-Zip のキーの下ではありません。
 
-- zip ファイルと同名のフォルダを作成して展開する（`-o*`）
-- 同名ファイルは上書き（`-aoa`）
+1. レジストリ エディターを開く（`Win + R` → `regedit` → Enter）
+
+上部のアドレス欄に次を貼り付けて Enter
+
+```
+ HKEY_CLASSES_ROOT\*\shell
+```
+
+1. 左の `shell` を右クリック → **新規** → **キー** → 名前を `wrap7z`
+2. できた `wrap7z` を右クリック → **新規** → **キー** → 名前を `command`
+  ```
+   HKEY_CLASSES_ROOT
+     └ *
+         └ shell            ← ここまでアドレス欄でジャンプ
+             └ wrap7z       ← 自分で作る
+                 └ command  ← 自分で作る
+  ```
+3. 左で `wrap7z` を選び、右ペインを次のようにする
+
+  | 名前     | 種類     | 値                                   |
+  | ------ | ------ | ----------------------------------- |
+  | `(既定)` | REG_SZ | `7-Zipで展開`                          |
+  | `Icon` | REG_SZ | `C:\Program Files\7-Zip\7zFM.exe,0` |
+
+   `Icon` が無いときは、右ペインの空きを右クリック → **新規** → **文字列値** で作ります。  
+   メニューに出る名前は `(既定)` の値です。好きな文言に変えてかまいません。
+4. 左で `command` を選び、`(既定)` を次のようにする
+
+  | 名前     | 種類     | 値                                          |
+  | ------ | ------ | ------------------------------------------ |
+  | `(既定)` | REG_SZ | `"C:\Program Files\7-Zip\wrap7z.exe" "%1"` |
+
+
+
+
+### 3. 使う
+
+右クリックして **7-Zipで展開** を選びます。同じ名前のフォルダが作られ、その中に中身が展開されます。すでに同名のファイルがある場合は上書きします。
 
 ## ライセンス
 
